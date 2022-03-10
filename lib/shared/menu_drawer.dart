@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../screen/anime_list.dart';
+import '../screen/anime_list_screen.dart';
 import '../screen/intro_screen.dart';
 
 class MenuDrawer extends StatelessWidget {
@@ -54,12 +54,14 @@ List<Widget> buildMenuItems(BuildContext context) {
                   MaterialPageRoute(builder: (context) => const IntroScreen()));
               break;
             case 'Anime List':
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => const AnimeList()));
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const AnimeListScreen()));
               break;
             default:
-             Navigator.pop(context);
-             Navigator.push(context,
+              Navigator.pop(context);
+              Navigator.push(context,
                   MaterialPageRoute(builder: (context) => const IntroScreen()));
           }
         },
