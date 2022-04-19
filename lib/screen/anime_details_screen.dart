@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:my_flutter_application/data/http/fetch_video.dart';
 import 'package:my_flutter_application/data/models/anime.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+
+import '../data/models/video.dart';
 
 class AnimeDetailsScreen extends StatefulWidget {
   const AnimeDetailsScreen({Key? key, required this.anime}) : super(key: key);
@@ -11,6 +15,15 @@ class AnimeDetailsScreen extends StatefulWidget {
 }
 
 class _AnimeDetailsScreenState extends State<AnimeDetailsScreen> {
+  late Future<SearchVideoList> videoList;
+
+  @override
+  void initState() {
+    super.initState();
+    var videoHelper = VideoHelper();
+    videoList = videoHelper.getYoutube(widget.anime.title);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -18,28 +31,49 @@ class _AnimeDetailsScreenState extends State<AnimeDetailsScreen> {
           backgroundColor: Colors.lightGreen,
           elevation: 0,
         ),
-        body: Container(
-          decoration: const BoxDecoration(color: Colors.white),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              Image.network(
-                widget.anime.movieBanner,
-                height: 240,
-                fit: BoxFit.fill,
-              ),
-              _AnimeTabView(anime: widget.anime),
-            ],
-          ),
-        ));
+        body: FutureBuilder<SearchVideoList>(
+            future: videoList,
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                return Container(
+                  decoration: const BoxDecoration(color: Colors.white),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      Image.network(
+                        widget.anime.movieBanner,
+                        height: 240,
+                        fit: BoxFit.fill,
+                      ),
+                      _AnimeTabView(
+                        anime: widget.anime,
+                        animeVideoId: snapshot.data!.items[0].id.videoId,
+                      ),
+                    ],
+                  ),
+                );
+              } else if (snapshot.hasError) {
+                return Text('${snapshot.error}');
+              }
+              // By default, show a loading spinner.
+              return const CircularProgressIndicator();
+            }));
   }
 }
 
 class _AnimeTabView extends StatelessWidget {
-  const _AnimeTabView({Key? key, required this.anime}) : super(key: key);
+  _AnimeTabView({Key? key, required this.anime, required this.animeVideoId})
+      : super(key: key);
 
   final Anime anime;
-
+  final String animeVideoId;
+  late final YoutubePlayerController _controller = YoutubePlayerController(
+    initialVideoId: "FWjiXOqRKhk",
+    flags: const YoutubePlayerFlags(
+      autoPlay: true,
+      mute: false,
+    ),
+  );
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -81,13 +115,10 @@ class _AnimeTabView extends StatelessWidget {
                               ],
                             ),
                             Container(
-                              child: const Center(
-                                child: Text('Display Tab 2',
-                                    style: TextStyle(
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.bold)),
-                              ),
-                            ),
+                                margin: const EdgeInsets.all(20),
+                                child: YoutubePlayer(
+                                    controller: _controller,
+                                    showVideoProgressIndicator: true))
                           ]))
                     ])),
           ]),
